@@ -1,0 +1,390 @@
+DROP FUNCTION IF EXISTS update_last_updation_date() CASCADE;
+DROP FUNCTION IF EXISTS update_updation_date() CASCADE;
+
+Drop table admin;
+
+CREATE OR REPLACE FUNCTION update_admin_updationdate()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updationdate = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE TABLE admin (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    updationdate TIMESTAMP
+);
+
+
+CREATE TRIGGER admin_updationdate_trigger
+BEFORE INSERT OR UPDATE ON admin
+FOR EACH ROW
+EXECUTE FUNCTION update_admin_updationdate();
+
+
+insert into admin(username,password) values('admin','12345');
+
+//here admin table's updation date is filled automatically on the current time
+
+
+carrental=# select * from admin;
+ id | username | password |        updationdate
+----+----------+----------+----------------------------
+  1 | admin    | 12345    | 2023-12-05 12:46:08.425925
+
+
+--admin table over
+
+--users table
+
+-- Function to update registration date
+CREATE OR REPLACE FUNCTION update_user_regdate()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.regdate = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to update updation date
+CREATE OR REPLACE FUNCTION update_user_updationdate()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updationdate = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TABLE tblusers (
+    id SERIAL PRIMARY KEY,
+    fullname VARCHAR(255) NOT NULL,
+    emailid VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    contactno VARCHAR(20),
+    dob DATE,
+    address VARCHAR(255),
+    city VARCHAR(255),
+    country VARCHAR(255),
+    regdate TIMESTAMP,
+    updationdate TIMESTAMP
+);
+
+-- Apply the triggers to the new table
+CREATE TRIGGER user_regdate_trigger
+BEFORE INSERT ON tblusers
+FOR EACH ROW
+EXECUTE FUNCTION update_user_regdate();
+
+CREATE TRIGGER user_updationdate_trigger
+BEFORE UPDATE ON tblusers
+FOR EACH ROW
+EXECUTE FUNCTION update_user_updationdate();
+
+
+-- Insert values into tblusers
+INSERT INTO tblusers (fullname, emailid, password, contactno, dob, address, city, country)
+VALUES (
+    'John Doe',
+    'john.doe@example.com',
+    '7890',
+    '1234567890',
+    '1990-01-01',
+    '123 Main Street',
+    'Anytown',
+    'CountryX'
+);
+
+//here users table's regdate is filled automatically on the current time
+
+update tblusers set password='09876' where id=1;
+
+//here users table's updation date is filled automatically on the current time
+
+
+INSERT INTO tblusers (fullname, emailid, password, contactno, dob, address, city, country)
+VALUES (
+    'Alice Johnson',
+    'alice.johnson@example.com',
+    '7890', -- Replace with the hashed password in a real-world scenario
+    '1234567890',
+    '1980-10-20',
+    '789 Pine Street',
+    'YetAnotherCity',
+    'CountryZ'
+);
+
+id |   fullname    |          emailid          | password | contactno  |    dob     |     address     |      city      |
+ country  |          regdate           |        updationdate
+----+---------------+---------------------------+----------+------------+------------+-----------------+----------------+
+----------+----------------------------+----------------------------
+  1 | John Doe      | john.doe@example.com      | 09876    | 1234567890 | 1990-01-01 | 123 Main Street | Anytown        |
+ CountryX | 2023-12-05 12:56:13.657227 | 2023-12-05 12:59:25.799225
+  2 | Alice Johnson | alice.johnson@example.com | 7890     | 1234567890 | 1980-10-20 | 789 Pine Street | YetAnotherCity |
+ CountryZ | 2023-12-05 13:04:50.032077 |
+
+
+
+//brands table 
+
+-- Function to update creation date for brands
+CREATE OR REPLACE FUNCTION update_brand_creationdate()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.creationdate = COALESCE(NEW.creationdate, NOW());
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to update updation date for brands
+CREATE OR REPLACE FUNCTION update_brand_updationdate()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updationdate = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+
+
+-- Apply triggers to the tblbrands table
+CREATE TRIGGER brand_creationdate_trigger
+BEFORE INSERT ON tblbrands
+FOR EACH ROW
+EXECUTE FUNCTION update_brand_creationdate();
+
+CREATE TRIGGER brand_updationdate_trigger
+BEFORE UPDATE ON tblbrands
+FOR EACH ROW
+EXECUTE FUNCTION update_brand_updationdate();
+
+
+select * from tblbrands;
+ id | brandname  |       creationdate        |       updationdate
+----+------------+---------------------------+---------------------------
+  1 | Maruti     | 2017-06-18 16:24:34+05:30 | 2017-06-19 06:42:23+05:30
+  2 | BMW        | 2017-06-18 16:24:50+05:30 |
+  3 | Audi       | 2017-06-18 16:25:03+05:30 |
+  4 | Nissan     | 2017-06-18 16:25:13+05:30 |
+  5 | Toyota     | 2017-06-18 16:25:24+05:30 |
+  7 | Volkswagen | 2017-06-19 06:22:13+05:30 | 2020-07-07 14:14:09+05:30
+
+
+//vehicles table
+-- Function to update registration date for vehicles
+CREATE OR REPLACE FUNCTION update_vehicle_regdate()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.regdate = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to update updation date for vehicles
+CREATE OR REPLACE FUNCTION update_vehicle_updationdate()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updationdate = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Apply triggers to the tblvehicles table
+CREATE TRIGGER vehicle_regdate_trigger
+BEFORE INSERT ON tblvehicles
+FOR EACH ROW
+EXECUTE FUNCTION update_vehicle_regdate();
+
+CREATE TRIGGER vehicle_updationdate_trigger
+BEFORE UPDATE ON tblvehicles
+FOR EACH ROW
+EXECUTE FUNCTION update_vehicle_updationdate();
+
+alter table tblvehicles add foreign key(vehiclesbrand) references tblbrands (id);
+
+
+
+
+
+INSERT INTO tblvehicles (
+    vehiclestitle, 
+    vehiclesbrand, 
+    vehiclesoverview, 
+    priceperday, 
+    fueltype, 
+    modelyear, 
+    seatingcapacity, 
+    airconditioner, 
+    powerdoorlocks, 
+    antilockbrakingsystem, 
+    brakeassist, 
+    powersteering, 
+    driverairbag, 
+    passengerairbag, 
+    powerwindows, 
+    cdplayer, 
+    centrallocking, 
+    crashsensor, 
+    leatherseats
+)
+VALUES 
+(
+    'Maruti Suzuki Wagon R', 
+    1, 
+    'Maruti Wagon R Latest Updates:Maruti Suzuki has launched the BS6 Wagon R S-CNG in India. The LXI CNG and LXI (O) CNG variants now cost Rs 5.25 lakh and Rs 5.32 lakh respectively up by Rs 19000. Maruti claims a fuel economy of 32.52km per kg. The CNG Wagon R continuation in the BS6 era is part of the carmaker Mission Green Million initiative announced at Auto Expo 2020.Previously the carmaker had updated the 1.0-litre powertrain to meet BS6 emission norms. It develops 68PS of power and 90Nm of torque same as the BS4 unit. However  the updated motor now returns 21.79 kmpl which is a little less than the BS4 units 22.5kmpl claimed figure. Barring the CNG variants the prices of the Wagon R 1.0-litre have been hiked by Rs 8000.', 
+    500, 
+    'Petrol', 
+    2019, 
+    5, 
+    1, 
+    1, 
+    1, 
+    1, 
+    1, 
+    1, 
+    1, 
+    1, 
+    1, 
+    1, 
+    1, 
+    1
+);
+
+
+
+//summa insertion
+INSERT INTO tblvehicles (vehiclestitle, vehiclesbrand, vehiclesoverview, priceperday, fueltype, modelyear, seatingcapacity, airconditioner, powerdoorlocks, antilockbrakingsystem, brakeassist, powersteering, driverairbag, passengerairbag, powerwindows, cdplayer, centrallocking, crashsensor, leatherseats)
+VALUES 
+('Maruti Suzuki Wagon R', 1, 'Maruti Wagon R Latest Updates:Maruti Suzuki has launched the BS6 Wagon R S-CNG in India. The LXI CNG and LXI (O) CNG variants now cost Rs 5.25 lakh and Rs 5.32 lakh respectively, up by Rs 19,000. Maruti claims a fuel economy of 32.52km per kg. The CNG Wagon R continuation in the BS6 era is part of the carmaker Mission Green Million initiative announced at Auto Expo 2020.Previously, the carmaker had updated the 1.0-litre powertrain to meet BS6 emission norms. It develops 68PS of power and 90Nm of torque, same as the BS4 unit. However, the updated motor now returns 21.79 kmpl, which is a little less than the BS4 units 22.5kmpl claimed figure. Barring the CNG variants, the prices of the Wagon R 1.0-litre have been hiked by Rs 8,000.', 500, 'Petrol', 2019, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+('BMW 5 Series', 2, 'BMW 5 Series price starts at ? 55.4 Lakh and goes upto ? 68.39 Lakh. The price of Petrol version for 5 Series ranges between ? 55.4 Lakh - ? 60.89 Lakh and the price of Diesel version for 5 Series ranges between ? 60.89 Lakh - ? 68.39 Lakh.', 1000, 'Petrol', 2018, 5, 1, 1, 1, 1, 1, 1, 1, NULL, 1, 1),
+('Audi Q8', 3, 'As per ARAI, the mileage of Q8 is 0 kmpl. Real mileage of the vehicle varies depending upon the driving habits. City and highway mileage figures also vary depending upon the road conditions.', 3000, 'Petrol', 2017, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+('City', 2, 'bfcg', 1000, 'Petrol', NULL, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+
+
+// real insertion 
+INSERT INTO tblvehicles (
+    vehiclestitle, vehiclesbrand, vehiclesoverview, priceperday, fueltype, modelyear, seatingcapacity, airconditioner, 
+    powerdoorlocks, antilockbrakingsystem, brakeassist, powersteering, driverairbag, passengerairbag, powerwindows, 
+    cdplayer, centrallocking, crashsensor, leatherseats
+)
+VALUES 
+(
+    'BMW 5 Series', 2, 'BMW 5 Series price starts at ₹ 55.4 Lakh and goes up to ₹ 68.39 Lakh. The price of the Petrol version for 5 Series ranges between ₹ 55.4 Lakh - ₹ 60.89 Lakh, and the price of the Diesel version for 5 Series ranges between ₹ 60.89 Lakh - ₹ 68.39 Lakh.', 
+    1000, 'Petrol', 2018, 5, 1, 1, 1, 1, 1,NULL,1,1,1,1,1,1
+);
+
+//table contactusinfo
+
+carrental=# select * from tblcontactusinfo;
+ id |        address         |    emailid     |  contactno
+----+------------------------+----------------+-------------
+  1 | J&K Block, Laxmi Nagar | info@gmail.com | 8974561236
+
+
+
+//table contactusquery
+
+
+CREATE OR REPLACE FUNCTION update_contactus_postingdate()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.postingdate := NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER contactus_postingdate_trigger
+BEFORE INSERT ON tblcontactusquery
+FOR EACH ROW
+EXECUTE FUNCTION update_contactus_postingdate();
+
+
+carrental=# select * from tblcontactusquery;
+ id | name  |     emailid     | contactnumber |                  message
+   |        postingdate        | status
+----+-------+-----------------+---------------+----------------------------------------
+---+---------------------------+--------
+  1 | Kunal | kunal@gmail.com | 7977779798    | I want to know your branch in Chandigar
+h? | 2020-07-07 09:34:51+05:30 |      1
+
+
+//tblbooking
+
+
+CREATE OR REPLACE FUNCTION update_booking_postingdate()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.postingdate := NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER booking_postingdate_trigger
+BEFORE INSERT ON tblbooking
+FOR EACH ROW
+EXECUTE FUNCTION update_booking_postingdate();
+
+
+
+
+carrental=# select * from tblbooking;
+ id | bookingnumber |     useremail     | vehicleid |  fromdate  |   todate   |      me
+ssage       | status |        postingdate
+----+---------------+-------------------+-----------+------------+------------+--------
+------------+--------+---------------------------
+  1 |         12345 | user1@example.com |         1 | 2023-12-01 | 2023-12-05 | Booking
+ for a trip |      0 | 2023-12-03 00:00:00+05:30
+alter table tblbooking add foreign key(vehicleid) references tblvehicles (i
+d);
+
+
+//tbltestimonial
+
+CREATE OR REPLACE FUNCTION update_testimonial_postingdate()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.postingdate := NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+
+
+CREATE TRIGGER testimonial_postingdate_trigger
+BEFORE INSERT ON tbltestimonial
+FOR EACH ROW
+EXECUTE FUNCTION update_testimonial_postingdate();
+
+
+TRUNCATE TABLE tbltestimonial;
+
+carrental=# insert into tbltestimonial(useremail,testimonial, bookingid)  values('user1
+@example.com','very good',1);
+INSERT 0 1
+carrental=# select * from tbltestimonial;
+     useremail     | testimonial |        postingdate         | bookingid
+-------------------+-------------+----------------------------+-----------
+ user1@example.com | very good   | 2023-12-05 15:49:37.734649 |         1
+
+
+
+
+
+
+delete from tblsubscribers where id=5;
+DELETE 1
+carrental=# select * from tblsubscribers;
+ id | subscriberemail  |     postingdate
+----+------------------+---------------------
+  4 | harish@gmail.com | 2020-07-07 09:26:21
+
+
+  
